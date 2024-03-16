@@ -48,7 +48,10 @@ class MongoDbSingleton:
         self.__m_collection.replace_one({ "_id": new_instance._id }, new_instance.to_dict())
         pass
 
+    # def find_one_by_key_value(self, key, value):
+    #     result = self.__m_collection.find({key: value})
+    #     return result
+
     def find_one_by_key_value(self, key, value):
-        result = self.__m_collection.find({key: value})
+        result = self.__m_collection.find_one({key: value})
         return result
-    
