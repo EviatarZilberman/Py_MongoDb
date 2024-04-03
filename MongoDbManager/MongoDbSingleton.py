@@ -45,7 +45,7 @@ class MongoDbSingleton:
         return self.__m_collection.delete_one({"_id": ObjectId(id)})
 
     def replace_member(self, new_instance):
-        self.__m_collection.replace_one({ "_id": new_instance._id }, new_instance.to_dict())
+        self.__m_collection.replace_one({ "_id": new_instance.m_internal_id }, new_instance.to_dict())
         pass
 
     # def find_one_by_key_value(self, key, value):
