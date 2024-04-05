@@ -39,7 +39,8 @@ class MongoDbSingleton:
         return result
 
     def update_member(self, id, key, newValue):
-        self.__m_collection.update_one({"_id": ObjectId(id)}, {"$set": {key: newValue}})
+        dict_new_value = newValue.to_dict()
+        self.__m_collection.update_one({"_id": ObjectId(id)}, {"$set": {key: dict_new_value}})
 
     def delete_by_id(self, id):
         return self.__m_collection.delete_one({"_id": ObjectId(id)})
