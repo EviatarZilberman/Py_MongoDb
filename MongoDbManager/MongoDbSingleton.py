@@ -37,9 +37,25 @@ class MongoDbSingleton:
     def find_by_key_value(self, key, value):
         result = list(self.__m_collection.find({key: value}))
         return result
+    #
+    # def update_member(self, id, key, newValue):
+    #     is_instance = MongoDbSingleton.is_object(newValue)
+    #     if not is_instance:
+    #         dict_new_value = newValue.to_dict()
+    #     else:
+    #         dict_new_value = newValue
+    #     self.__m_collection.update_one({"_id": ObjectId(id)}, {"$set": {key: dict_new_value}})
 
     def update_member(self, id, key, newValue):
-        dict_new_value = newValue.to_dict()
+        res = None
+        try:
+            res = hasattr(newValue, "to_dict") and callable(newValue.to_dict)
+        except Exception as e:
+            print(e)
+        if res:
+            dict_new_value = newValue.to_dict()
+        else:
+            dict_new_value = newValue
         self.__m_collection.update_one({"_id": ObjectId(id)}, {"$set": {key: dict_new_value}})
 
     def delete_by_id(self, id):
@@ -49,10 +65,10 @@ class MongoDbSingleton:
         self.__m_collection.replace_one({ "_id": new_instance.m_internal_id }, new_instance.to_dict())
         pass
 
-    # def find_one_by_key_value(self, key, value):
-    #     result = self.__m_collection.find({key: value})
-    #     return result
-
     def find_one_by_key_value(self, key, value):
         result = self.__m_collection.find_one({key: value})
         return result
+
+    @staticmethod
+    def is_object(arg):
+        return isinstance(arg, str)
