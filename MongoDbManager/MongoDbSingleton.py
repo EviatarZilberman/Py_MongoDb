@@ -17,8 +17,9 @@ class MongoDbSingleton:
         return cls.m_instance
 
     @classmethod
-    def re_init_instance(self):
-        self.__m_client = None
+    def re_init_instance(self, reset_client = None):
+        if reset_client:
+            self.__m_client = None
         self.__m_db = None
         self.__m_collection = None
         self.m_instance = None
@@ -72,3 +73,16 @@ class MongoDbSingleton:
     @staticmethod
     def is_object(arg):
         return isinstance(arg, str)
+
+    @staticmethod
+    def reinitialize(db=None, collection=None, domain='localhost', port=27017):
+        MongoDbSingleton.__m_db = None
+        MongoDbSingleton.__m_collection = None
+        MongoDbSingleton.__m_client = None
+        MongoDbSingleton.m_instance = None
+
+        if db is not None and collection is not None:
+            MongoDbSingleton.__m_client = MongoClient(domain, port)
+            MongoDbSingleton.m_instance = MongoDbSingleton()
+            MongoDbSingleton.m_instance.__m_db = MongoDbSingleton.__m_client[db]
+            MongoDbSingleton.m_instance.__m_collection = MongoDbSingleton.m_instance.__m_db[collection]
