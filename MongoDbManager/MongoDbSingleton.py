@@ -47,16 +47,16 @@ class MongoDbSingleton:
     #         dict_new_value = newValue
     #     self.__m_collection.update_one({"_id": ObjectId(id)}, {"$set": {key: dict_new_value}})
 
-    def update_member(self, id, key, newValue):
+    def update_member(self, id, key, new_value):
         res = None
         try:
-            res = hasattr(newValue, "to_dict") and callable(newValue.to_dict)
+            res = hasattr(new_value, "to_dict") and callable(new_value.to_dict)
         except Exception as e:
             print(e)
         if res:
-            dict_new_value = newValue.to_dict()
+            dict_new_value = new_value.to_dict()
         else:
-            dict_new_value = newValue
+            dict_new_value = new_value
         self.__m_collection.update_one({"_id": ObjectId(id)}, {"$set": {key: dict_new_value}})
 
     def delete_by_id(self, id):
