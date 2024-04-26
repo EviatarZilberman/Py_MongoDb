@@ -1,53 +1,53 @@
-from pymongo import MongoClient
+from pymongo import MongoClient, errors
 from bson.objectid import ObjectId
 
 
 class MongoDbSingleton:
-    __m_client = None
-    __m_db = None
-    __m_collection = None
-    m_instance = None
+    _client = None
+    _db = None
+    _collection = None
+    _instance = None
 
     def __new__(cls, db, collection, domain = "localhost", port = 27017, *args, **kwargs):
-        if cls.m_instance is None:
-         cls.m_instance = super().__new__(cls, *args, **kwargs)
-         cls.__m_client = MongoClient(domain, port)
-         cls.m_instance.__m_db = cls.__m_client[db]
-         cls.m_instance.__m_collection = cls.m_instance.__m_db[collection]
-        return cls.m_instance
+        try:
+            if cls._instance is None:
+                cls._instance = super().__new__(cls, *args, **kwargs)
+                cls._client = MongoClient(domain, port)
+                cls._instance._db = cls._client[db]
+                cls._instance._collection = cls._instance._db[collection]
+                return cls._instance
+        except Exception as e:
+            print(str(e))
+            pass
 
     @classmethod
-    def re_init_instance(self, reset_client = None):
+    def re_init_instance(cls, reset_client = None):
         if reset_client:
-            self.__m_client = None
-        self.__m_db = None
-        self.__m_collection = None
-        self.m_instance = None
+            cls._client = None
+        cls._db = None
+        cls._collection = None
+        cls._instance = None
         pass
 
     def insert(self, inserted):
-        self.__m_collection.insert_one(inserted.to_dict())
+        self._collection.insert_one(inserted.to_dict())
         pass
 
     def find_all(self):
-        return self.__m_collection.find()
+        return self._collection.find()
 
-    def find_by_id(self, id):
-        return self.__m_collection.find_one({"_id": ObjectId(id)})
+    def find_by_id(self, item_id):
+        return self._collection.find_one({"_id": ObjectId(item_id)})
 
     def find_by_key_value(self, key, value):
-        result = list(self.__m_collection.find({key: value}))
-        return result
-    #
-    # def update_member(self, id, key, newValue):
-    #     is_instance = MongoDbSingleton.is_object(newValue)
-    #     if not is_instance:
-    #         dict_new_value = newValue.to_dict()
-    #     else:
-    #         dict_new_value = newValue
-    #     self.__m_collection.update_one({"_id": ObjectId(id)}, {"$set": {key: dict_new_value}})
+        try:
+            result = list(self._collection.find({key: value}))
+            return result
+        except Exception as e:
+            print(str(e))
+            return None
 
-    def update_member(self, id, key, new_value):
+    def update_member(self, item_id, key, new_value):
         res = None
         try:
             res = hasattr(new_value, "to_dict") and callable(new_value.to_dict)
@@ -57,32 +57,43 @@ class MongoDbSingleton:
             dict_new_value = new_value.to_dict()
         else:
             dict_new_value = new_value
-        self.__m_collection.update_one({"_id": ObjectId(id)}, {"$set": {key: dict_new_value}})
+        self._collection.update_one({"_id": ObjectId(item_id)}, {"$set": {key: dict_new_value}})
 
-    def delete_by_id(self, id):
-        return self.__m_collection.delete_one({"_id": ObjectId(id)})
+    def delete_by_id(self, item_id):
+        try:
+            result = self._collection.delete_one({"_id": ObjectId(item_id)})
+            if result.deleted_count == 1:
+                print("Document deleted successfully.")
+            else:
+                print("Document with specified ID not found.")
+        except errors.PyMongoError as e:
+            print(f"An error occurred while deleting document: {e}")
+
+    # def delete_by_id(self, id):
+    #     self.__m_collection.delete_one({"_id": ObjectId(id)})
+    #     pass
 
     def replace_member(self, new_instance):
-        self.__m_collection.replace_one({ "_id": new_instance.m_internal_id }, new_instance.to_dict())
+        self._collection.replace_one({ "_id": new_instance.internal_id }, new_instance.to_dict())
         pass
 
     def find_one_by_key_value(self, key, value):
-        result = self.__m_collection.find_one({key: value})
-        return result
-
-    @staticmethod
-    def is_object(arg):
-        return isinstance(arg, str)
+        try:
+            result = self._collection.find_one({key: value})
+            return result
+        except Exception as e:
+            print(str(e))
+            return None
 
     @staticmethod
     def reinitialize(db=None, collection=None, domain='localhost', port=27017):
-        MongoDbSingleton.__m_db = None
-        MongoDbSingleton.__m_collection = None
-        MongoDbSingleton.__m_client = None
-        MongoDbSingleton.m_instance = None
+        MongoDbSingleton._db = None
+        MongoDbSingleton._collection = None
+        MongoDbSingleton._client = None
+        MongoDbSingleton._instance = None
 
         if db is not None and collection is not None:
-            MongoDbSingleton.__m_client = MongoClient(domain, port)
-            MongoDbSingleton.m_instance = MongoDbSingleton()
-            MongoDbSingleton.m_instance.__m_db = MongoDbSingleton.__m_client[db]
-            MongoDbSingleton.m_instance.__m_collection = MongoDbSingleton.m_instance.__m_db[collection]
+            MongoDbSingleton._client = MongoClient(domain, port)
+            MongoDbSingleton._instance = MongoDbSingleton()
+            MongoDbSingleton._instance._db = MongoDbSingleton._client[db]
+            MongoDbSingleton._instance._collection = MongoDbSingleton._instance._db[collection]
