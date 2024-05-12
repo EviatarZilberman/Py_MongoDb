@@ -35,7 +35,7 @@ class MongoDbSingleton:
     def find_all(self):
         return self._collection.find()
 
-    def find_by_id(self, item_id):
+    def find_by_id(self, item_id: str):
         return self._collection.find_one({"_id": ObjectId(item_id)})
 
     def find_by_key_value(self, key, value):
